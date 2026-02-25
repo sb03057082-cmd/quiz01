@@ -1,0 +1,436 @@
+```html
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>اختبار إدارة نظم المعلومات - الدكتور حسين جعفر ناصر</title>
+<style>
+  body {
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    direction: rtl;
+    background: #f9f9f9;
+    margin: 0;
+    padding: 20px;
+    color: #333;
+  }
+  .container {
+    max-width: 700px;
+    margin: auto;
+    background: white;
+    padding: 25px 30px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px #ccc;
+  }
+  header {
+    text-align: center;
+    margin-bottom: 25px;
+    border-bottom: 2px solid #005a9e;
+    padding-bottom: 15px;
+  }
+  header h1 {
+    margin: 0;
+    color: #005a9e;
+  }
+  header p {
+    margin: 4px 0;
+    font-weight: bold;
+    color: #004080;
+  }
+  .question-number {
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+  .question-text {
+    font-size: 1.1em;
+    margin-bottom: 15px;
+  }
+  .options button {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    font-size: 1em;
+    border: 2px solid #005a9e;
+    background: white;
+    color: #005a9e;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.3s, color 0.3s;
+  }
+  .options button:hover {
+    background: #005a9e;
+    color: white;
+  }
+  .options button.correct {
+    background: #4caf50;
+    color: white;
+    border-color: #4caf50;
+  }
+  .options button.incorrect {
+    background: #f44336;
+    color: white;
+    border-color: #f44336;
+  }
+  .explanation {
+    margin-top: 15px;
+    padding: 12px;
+    background: #e7f3fe;
+    border-left: 5px solid #2196f3;
+    font-size: 0.95em;
+    color: #0b486b;
+  }
+  .next-btn, .show-all-btn {
+    margin-top: 20px;
+    background: #005a9e;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    font-size: 1em;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .next-btn:disabled {
+    background: #999;
+    cursor: not-allowed;
+  }
+  .result {
+    text-align: center;
+  }
+  .score {
+    font-size: 1.3em;
+    margin-bottom: 15px;
+    color: #005a9e;
+  }
+  .recommendation {
+    font-size: 1em;
+    color: #333;
+  }
+  footer {
+    margin-top: 40px;
+    text-align: center;
+    font-style: italic;
+    color: #555;
+    border-top: 1px solid #ccc;
+    padding-top: 15px;
+  }
+  #studentNameInput {
+    width: 100%;
+    padding: 10px;
+    font-size: 1em;
+    margin-bottom: 15px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+  }
+  #adminPanel {
+    margin-top: 30px;
+    border-top: 2px solid #005a9e;
+    padding-top: 20px;
+  }
+  #adminPanel h2 {
+    color: #005a9e;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+  }
+  th, td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: right;
+  }
+  th {
+    background-color: #e0e7f0;
+  }
+  .correct-answer {
+    color: #4caf50;
+    font-weight: bold;
+  }
+  .incorrect-answer {
+    color: #f44336;
+    font-weight: bold;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>الدكتور حسين جعفر ناصر</h1>
+    <p>الجامعة اللبنانية - كلية الإدارة</p>
+    <p>مادة إدارة نظم المعلومات</p>
+  </header>
+
+  <div id="loginArea">
+    <label for="studentNameInput">الرجاء إدخال اسم الطالب للبدء في الاختبار:</label>
+    <input type="text" id="studentNameInput" placeholder="اسم الطالب" />
+    <button id="startQuizBtn" class="next-btn" disabled>بدء الاختبار</button>
+  </div>
+
+  <div id="quiz-area" style="display:none;"></div>
+
+  <footer>
+    مع تحياتي إلى الدرس الثاني
+  </footer>
+
+  <div id="adminPanel" style="display:none;">
+    <h2>لوحة تحكم الدكتور - عرض إجابات الطلاب</h2>
+    <button id="toggleAdminBtn" class="show-all-btn">إظهار / إخفاء قائمة الطلاب</button>
+    <div id="studentsList" style="display:none; max-height:400px; overflow-y:auto; margin-top:15px;"></div>
+  </div>
+</div>
+
+<script>
+  const questions = [
+    {
+      question: "نظم المعلومات تهدف إلى تحسين كفاءة العمليات في المؤسسة أم تهدف فقط إلى تخزين البيانات بدون تحليل؟",
+      options: [
+        { text: "تهدف إلى تحسين كفاءة العمليات في المؤسسة", correct: true, explanation: "نظم المعلومات تستخدم لتحسين الكفاءة ودعم اتخاذ القرار، وليس فقط لتخزين البيانات." },
+        { text: "تهدف فقط إلى تخزين البيانات بدون تحليل", correct: false, explanation: "نظم المعلومات أكثر من مجرد تخزين؛ هي لتحليل ودعم العمليات." }
+      ]
+    },
+    {
+      question: "هل البيانات هي مجرد حقائق خام، والمعلومات هي بيانات معالجة ومفسرة، أم أن البيانات والمعلومات هما نفس الشيء؟",
+      options: [
+        { text: "البيانات هي حقائق خام، والمعلومات هي بيانات معالجة ومفسرة", correct: true, explanation: "البيانات تحتاج إلى معالجة لتحول إلى معلومات ذات معنى." },
+        { text: "البيانات والمعلومات هما نفس الشيء", correct: false, explanation: "البيانات والمعلومات ليستا متطابقتين، فالمعلومات هي بيانات بعد المعالجة." }
+      ]
+    },
+    {
+      question: "هل نظم المعلومات الإدارية تركز بشكل رئيسي على دعم القرارات الإدارية أم تركز فقط على العمليات الإنتاجية؟",
+      options: [
+        { text: "تركز بشكل رئيسي على دعم القرارات الإدارية", correct: true, explanation: "نظم المعلومات الإدارية تساعد المدراء في اتخاذ قرارات مبنية على بيانات وتحليلات." },
+        { text: "تركز فقط على العمليات الإنتاجية", correct: false, explanation: "نظم المعلومات الإدارية تتعدى العمليات الإنتاجية لتشمل دعم القرار." }
+      ]
+    },
+    {
+      question: "هل قاعدة البيانات هي مجموعة من البيانات المنظمة التي يمكن الوصول إليها بسهولة أم هي برنامج لتصميم المواقع الإلكترونية؟",
+      options: [
+        { text: "مجموعة من البيانات المنظمة التي يمكن الوصول إليها بسهولة", correct: true, explanation: "قاعدة البيانات تخزن البيانات بشكل منظم لتسهيل الوصول والإدارة." },
+        { text: "برنامج لتصميم المواقع الإلكترونية", correct: false, explanation: "قاعدة البيانات ليست برنامج تصميم مواقع." }
+      ]
+    },
+    {
+      question: "هل تحليل النظام هو عملية فهم وتحليل متطلبات النظام قبل تطويره أم هو عملية اختبار النظام بعد تطويره فقط؟",
+      options: [
+        { text: "فهم وتحليل متطلبات النظام قبل تطويره", correct: true, explanation: "تحليل النظام يتضمن دراسة الاحتياجات لتصميم نظام يلبيها." },
+        { text: "اختبار النظام بعد تطويره فقط", correct: false, explanation: "اختبار النظام هو مرحلة لاحقة بعد التحليل." }
+      ]
+    },
+    {
+      question: "هل نظم دعم القرار تعتمد على البيانات فقط دون تدخل بشري أم تساعد في اتخاذ قرارات معقدة عبر تحليل البيانات وتقديم توصيات؟",
+      options: [
+        { text: "تعتمد على البيانات فقط دون تدخل بشري", correct: false, explanation: "نظم دعم القرار تجمع بين البيانات والتحليل لمساعدة البشر في اتخاذ القرارات." },
+        { text: "تساعد في اتخاذ قرارات معقدة عبر تحليل البيانات وتقديم توصيات", correct: true, explanation: "نظم دعم القرار توفر أدوات تحليلية لدعم اتخاذ القرار." }
+      ]
+    },
+    {
+      question: "هل الأمن السيبراني في نظم المعلومات يهدف إلى حماية البيانات من الاختراقات أم يهدف إلى زيادة سرعة الشبكة فقط؟",
+      options: [
+        { text: "يهدف إلى حماية البيانات من الاختراقات", correct: true, explanation: "الأمن السيبراني يحمي نظم المعلومات من التهديدات والهجمات." },
+        { text: "يهدف إلى زيادة سرعة الشبكة فقط", correct: false, explanation: "الأمن السيبراني لا يختص بسرعات الشبكة." }
+      ]
+    },
+    {
+      question: "هل البرمجيات التطبيقية هي برامج تُستخدم لأداء مهام محددة مثل معالجة النصوص أم هي الأجهزة المستخدمة في النظام؟",
+      options: [
+        { text: "برامج تُستخدم لأداء مهام محددة مثل معالجة النصوص", correct: true, explanation: "البرمجيات التطبيقية تساعد المستخدمين في أداء مهام معينة." },
+        { text: "الأجهزة المستخدمة في النظام", correct: false, explanation: "الأجهزة هي مكونات مادية وليست برمجيات." }
+      ]
+    },
+    {
+      question: "هل التخطيط لنظم المعلومات يشمل تحديد الأهداف والاستراتيجيات لتطوير النظام أم يقتصر فقط على شراء الأجهزة؟",
+      options: [
+        { text: "يشمل تحديد الأهداف والاستراتيجيات لتطوير النظام", correct: true, explanation: "التخطيط يشمل دراسة شاملة لتلبية احتياجات العمل." },
+        { text: "يقتصر فقط على شراء الأجهزة", correct: false, explanation: "شراء الأجهزة جزء صغير من التخطيط." }
+      ]
+    },
+    {
+      question: "هل تقنية الحوسبة السحابية تسمح بتخزين البيانات والوصول إليها عبر الإنترنت أم تعني تخزين البيانات فقط على الحواسيب المحلية؟",
+      options: [
+        { text: "تسمح بتخزين البيانات والوصول إليها عبر الإنترنت", correct: true, explanation: "الحوسبة السحابية توفر خدمات عبر الإنترنت للوصول إلى الموارد والبيانات." },
+        { text: "تعني تخزين البيانات فقط على الحواسيب المحلية", correct: false, explanation: "الحوسبة السحابية تعتمد على الإنترنت وليس التخزين المحلي فقط." }
+      ]
+    }
+  ];
+
+  let currentQuestionIndex = 0;
+  let score = 0;
+  let studentName = "";
+  let studentAnswers = [];
+
+  const loginArea = document.getElementById("loginArea");
+  const studentNameInput = document.getElementById("studentNameInput");
+  const startQuizBtn = document.getElementById("startQuizBtn");
+  const quizArea = document.getElementById("quiz-area");
+  const adminPanel = document.getElementById("adminPanel");
+  const studentsList = document.getElementById("studentsList");
+  const toggleAdminBtn = document.getElementById("toggleAdminBtn");
+
+  // تمكين زر البدء فقط إذا أدخل الاسم
+  studentNameInput.addEventListener("input", () => {
+    startQuizBtn.disabled = studentNameInput.value.trim() === "";
+  });
+
+  startQuizBtn.addEventListener("click", () => {
+    studentName = studentNameInput.value.trim();
+    if (!studentName) return;
+    loginArea.style.display = "none";
+    quizArea.style.display = "block";
+    showQuestion();
+  });
+
+  function showQuestion() {
+    const q = questions[currentQuestionIndex];
+    quizArea.innerHTML = `
+      <div class="question-number">السؤال ${currentQuestionIndex + 1} من ${questions.length}</div>
+      <div class="question-text">${q.question}</div>
+      <div class="options">
+        ${q.options.map((opt, idx) => `<button onclick="selectOption(${idx})" id="option${idx}">${String.fromCharCode(0x627 + idx)}. ${opt.text}</button>`).join('')}
+      </div>
+      <div id="explanation" class="explanation" style="display:none;"></div>
+      <button id="nextBtn" class="next-btn" onclick="nextQuestion()" disabled>السؤال التالي</button>
+    `;
+  }
+
+  function selectOption(selectedIdx) {
+    const q = questions[currentQuestionIndex];
+    const buttons = document.querySelectorAll(".options button");
+    const explanationDiv = document.getElementById("explanation");
+    const nextBtn = document.getElementById("nextBtn");
+
+    buttons.forEach(btn => btn.disabled = true);
+
+    const selectedOption = q.options[selectedIdx];
+    studentAnswers[currentQuestionIndex] = {
+      selected: selectedOption.text,
+      correct: selectedOption.correct
+    };
+
+    if (selectedOption.correct) {
+      buttons[selectedIdx].classList.add("correct");
+      score++;
+    } else {
+      buttons[selectedIdx].classList.add("incorrect");
+      // تظليل الخيار الصحيح
+      q.options.forEach((opt, idx) => {
+        if (opt.correct) {
+          buttons[idx].classList.add("correct");
+        }
+      });
+    }
+
+    explanationDiv.style.display = "block";
+    explanationDiv.textContent = selectedOption.explanation;
+    nextBtn.disabled = false;
+  }
+
+  function nextQuestion() {
+    currentQuestionIndex++;
+    if (currentQuestionIndex < questions.length) {
+      showQuestion();
+    } else {
+      saveStudentResult();
+      showResult();
+    }
+  }
+
+  function showResult() {
+    quizArea.innerHTML = `
+      <div class="result">
+        <div class="score">نتيجتك: ${score} من ${questions.length}</div>
+        <div class="recommendation">${getRecommendation()}</div>
+        <h3>ملخص إجاباتك:</h3>
+        <ul>
+          ${questions.map((q, i) => {
+            const ans = studentAnswers[i];
+            const correctText = q.options.find(opt => opt.correct).text;
+            const className = ans.correct ? "correct-answer" : "incorrect-answer";
+            return `<li><strong>السؤال ${i + 1}:</strong> ${ans.selected} - <span class="${className}">${ans.correct ? "صحيح" : "خطأ"}</span> (الإجابة الصحيحة: ${correctText})</li>`;
+          }).join('')}
+        </ul>
+        <button class="next-btn" onclick="restartQuiz()">إعادة المحاولة</button>
+      </div>
+    `;
+  }
+
+  function getRecommendation() {
+    const percent = (score / questions.length) * 100;
+    if (percent === 100) {
+      return "أداء ممتاز! أنت متمكن من المادة.";
+    } else if (percent >= 70) {
+      return "أداء جيد، لكن من الأفضل مراجعة بعض المفاهيم.";
+    } else {
+      return "ينصح بمراجعة المادة بشكل أعمق لتحسين مستواك.";
+    }
+  }
+
+  function restartQuiz() {
+    currentQuestionIndex = 0;
+    score = 0;
+    studentAnswers = [];
+    quizArea.style.display = "none";
+    loginArea.style.display = "block";
+    studentNameInput.value = "";
+    startQuizBtn.disabled = true;
+  }
+
+  // حفظ نتيجة الطالب في localStorage
+  function saveStudentResult() {
+    const savedResults = JSON.parse(localStorage.getItem("studentResults") || "[]");
+    const timestamp = new Date().toISOString();
+    savedResults.push({
+      name: studentName,
+      score,
+      total: questions.length,
+      answers: studentAnswers,
+      date: timestamp
+    });
+    localStorage.setItem("studentResults", JSON.stringify(savedResults));
+  }
+
+  // عرض قائمة الطلاب وإجاباتهم (للدكتور فقط)
+  toggleAdminBtn.addEventListener("click", () => {
+    if (studentsList.style.display === "none") {
+      renderStudentsList();
+      studentsList.style.display = "block";
+      toggleAdminBtn.textContent = "إخفاء قائمة الطلاب";
+    } else {
+      studentsList.style.display = "none";
+      toggleAdminBtn.textContent = "إظهار قائمة الطلاب";
+    }
+  });
+
+  function renderStudentsList() {
+    const savedResults = JSON.parse(localStorage.getItem("studentResults") || "[]");
+    if (savedResults.length === 0) {
+      studentsList.innerHTML = "<p>لا توجد نتائج محفوظة بعد.</p>";
+      return;
+    }
+    studentsList.innerHTML = savedResults.map((res, i) => {
+      const answersSummary = res.answers.map((ans, idx) => {
+        const q = questions[idx];
+        const correctText = q.options.find(opt => opt.correct).text;
+        const className = ans.correct ? "correct-answer" : "incorrect-answer";
+        return `<li><strong>السؤال ${idx + 1}:</strong> ${ans.selected} - <span class="${className}">${ans.correct ? "صحيح" : "خطأ"}</span> (الإجابة الصحيحة: ${correctText})</li>`;
+      }).join('');
+      return `
+        <div style="border:1px solid #ccc; margin-bottom:15px; padding:10px; border-radius:6px;">
+          <strong>اسم الطالب:</strong> ${res.name}<br/>
+          <strong>النتيجة:</strong> ${res.score} من ${res.total} (${((res.score/res.total)*100).toFixed(1)}%)<br/>
+          <strong>التاريخ:</strong> ${new Date(res.date).toLocaleString()}<br/>
+          <details>
+            <summary>عرض الإجابات</summary>
+            <ul>${answersSummary}</ul>
+          </details>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // عرض لوحة الدكتور بجانب الصفحة (يمكن تفعيلها بسهولة)
+  // لتفعيلها، قم بإزالة التعليق عن السطر التالي:
+  // adminPanel.style.display = "block";
+</script>
+</body>
+</html>
+```
